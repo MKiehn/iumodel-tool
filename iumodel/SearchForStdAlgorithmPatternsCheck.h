@@ -132,16 +132,16 @@ class SearchForStdAlgorithmPatternsCheck : public ClangTidyCheck {
 
   bool isControlFlowTreeNode(clang::Stmt *node, LSTnode &item);
   bool isLogicalSyntaxTreeNode(clang::Stmt *node, LSTnode &item);
-  void traversingAST(clang::Expr *node, ParseInfo modus,
+  void traverseAST(clang::Expr *node, ParseInfo modus,
                      std::vector<LSTnode> &LST);
-  void traversingAST(clang::Stmt *node, ParseInfo modus,
+  void traverseAST(clang::Stmt *node, ParseInfo modus,
                      std::vector<LSTnode> &LST);
 
   clang::Stmt *getFirstNodeFromExpression(clang::Expr *expr);
   const clang::Stmt *getParentFromASTNode(clang::Stmt *startnode,
                                           const clang::Stmt *endnode,
                                           clang::ASTContext *context);
-  void createdControlFlowGraph(clang::Stmt *startnode,
+  void createControlFlowGraph(clang::Stmt *startnode,
                                const clang::Stmt *endnode,
                                clang::ASTContext *context);
 

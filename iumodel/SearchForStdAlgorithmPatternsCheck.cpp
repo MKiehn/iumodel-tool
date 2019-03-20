@@ -59,10 +59,10 @@ void SearchForStdAlgorithmPatternsCheck::registerMatchers(MatchFinder *Finder) {
             anyOf(hasDescendant(assignmentOp), hasDescendant(compareOp)));
   StatementMatcher findRangeWithRangeAndAssigment =
       allOf(hasDescendant(countOp), hasDescendant(arrayOp),
-            anyOf(forStmt(findRangeWithAssignment).bind("secondLoop"),
-                  doStmt(findRangeWithAssignment).bind("secondLoop"),
-                  whileStmt(findRangeWithAssignment).bind("secondLoop"),
-                  cxxForRangeStmt(findRangeWithAssignment).bind("secondLoop")));
+            anyOf(forStmt(findRangeWithAssignment).bind("innerLoop"),
+                  doStmt(findRangeWithAssignment).bind("innerLoop"),
+                  whileStmt(findRangeWithAssignment).bind("innerLoop"),
+                  cxxForRangeStmt(findRangeWithAssignment).bind("innerLoop")));
 
   Finder->addMatcher(forStmt(anyOf(findRangeWithRangeAndAssigment,
                                    findRangeWithAssignment, findRange))
@@ -120,7 +120,7 @@ bool SearchForStdAlgorithmPatternsCheck::isControlFlowTreeNode(
   return false;
 }
 
-void SearchForStdAlgorithmPatternsCheck::traversingAST(
+void SearchForStdAlgorithmPatternsCheck::traverseAST(
     clang::Expr *node, ParseInfo modus, std::vector<LSTnode> &LST) {
   if (node->child_end() == node->child_begin()) {
     if (clang::Stmt *singleNode = llvm::dyn_cast<Stmt>(node)) {
@@ -151,13 +151,13 @@ void SearchForStdAlgorithmPatternsCheck::traversingAST(
             LST.push_back(item);
           }
         }
-        traversingAST(child, modus, LST);
+        traverseAST(child, modus, LST);
       }
     }
   }
 }
 
-void SearchForStdAlgorithmPatternsCheck::traversingAST(
+void SearchForStdAlgorithmPatternsCheck::traverseAST(
     clang::Stmt *node, ParseInfo modus, std::vector<LSTnode> &LST) {
   for (auto child : node->children()) {
     if (child) {
@@ -172,7 +172,7 @@ void SearchForStdAlgorithmPatternsCheck::traversingAST(
           LST.push_back(item);
         }
       }
-      traversingAST(child, modus, LST);
+      traverseAST(child, modus, LST);
     }
   }
 }
@@ -195,7 +195,7 @@ const clang::Stmt *SearchForStdAlgorithmPatternsCheck::getParentFromASTNode(
   return nullptr;
 }
 
-void SearchForStdAlgorithmPatternsCheck::createdControlFlowGraph(
+void SearchForStdAlgorithmPatternsCheck::createControlFlowGraph(
     clang::Stmt *startnode, const clang::Stmt *endnode,
     clang::ASTContext *context) {
   controlFlowTree.clear();
@@ -209,7 +209,7 @@ void SearchForStdAlgorithmPatternsCheck::createdControlFlowGraph(
       clang::Stmt *node = const_cast<Stmt *>(item);
       LSTnode branchStmt = LSTnode(node, nullptr, nullptr);
       controlFlowTree.push_back(branchStmt);
-      traversingAST(node, ParseInfo::ControlFlowSyntax, controlFlowTree);
+      traverseAST(node, ParseInfo::ControlFlowSyntax, controlFlowTree);
     }
     startnode = const_cast<Stmt *>(item);
   } while (item != endnode);
@@ -328,10 +328,10 @@ bool SearchForStdAlgorithmPatternsCheck::isFind(
 }
 
 bool SearchForStdAlgorithmPatternsCheck::isMismatch(
-    const clang::Stmt *secondLoop, const clang::BinaryOperator *operation,
+    const clang::Stmt *innerLoop, const clang::BinaryOperator *operation,
     std::vector<LSTnode> &leftLST, std::vector<LSTnode> &rightLST,
     clang::ASTContext *context) {
-  if (secondLoop) {
+  if (innerLoop) {
     if (operation->getOpcodeStr().equals(StringRef("!="))) {
       if (hasIterable(leftLST) && hasIterable(rightLST)) {
         for (auto itemLeft : leftLST) {
@@ -356,10 +356,10 @@ bool SearchForStdAlgorithmPatternsCheck::isMismatch(
 }
 
 bool SearchForStdAlgorithmPatternsCheck::isSearch(
-    const clang::Stmt *secondLoop, const clang::BinaryOperator *operation,
+    const clang::Stmt *innerLoop, const clang::BinaryOperator *operation,
     std::vector<LSTnode> &leftLST, std::vector<LSTnode> &rightLST,
     clang::ASTContext *context) {
-  if (secondLoop) {
+  if (innerLoop) {
     if (operation->getOpcodeStr().equals(StringRef("=="))) {
       if (hasIterable(leftLST) && hasIterable(rightLST)) {
         if (hasEarlyExit(controlFlowTree)) {
@@ -386,7 +386,7 @@ bool SearchForStdAlgorithmPatternsCheck::isCountIf(
 void SearchForStdAlgorithmPatternsCheck::loopFind(
     const clang::BinaryOperator *assignmentOp,
     const clang::BinaryOperator *compareOp, const clang::Stmt *countOp,
-    const clang::Stmt *firstLoop, const clang::Stmt *secondLoop,
+    const clang::Stmt *firstLoop, const clang::Stmt *innerLoop,
     clang::ASTContext *context) {
   lhsLogicalSyntaxTree.clear();
   rhsLogicalSyntaxTree.clear();
@@ -400,7 +400,7 @@ void SearchForStdAlgorithmPatternsCheck::loopFind(
       opRHS = assignmentOp->getRHS();
       clang::Stmt *firstNode = getFirstNodeFromExpression(opLHS);
       if (firstNode && firstLoop) {
-        createdControlFlowGraph(firstNode, firstLoop, context);
+        createControlFlowGraph(firstNode, firstLoop, context);
       }
     }
 
@@ -409,12 +409,12 @@ void SearchForStdAlgorithmPatternsCheck::loopFind(
       opRHS = compareOp->getRHS();
       clang::Stmt *firstNode = getFirstNodeFromExpression(opLHS);
       if (firstNode && firstLoop) {
-        createdControlFlowGraph(firstNode, firstLoop, context);
+        createControlFlowGraph(firstNode, firstLoop, context);
       }
     }
 
-    traversingAST(opLHS, ParseInfo::LogicalSyntax, lhsLogicalSyntaxTree);
-    traversingAST(opRHS, ParseInfo::LogicalSyntax, rhsLogicalSyntaxTree);
+    traverseAST(opLHS, ParseInfo::LogicalSyntax, lhsLogicalSyntaxTree);
+    traverseAST(opRHS, ParseInfo::LogicalSyntax, rhsLogicalSyntaxTree);
 
     if (lhsLogicalSyntaxTree.empty() || rhsLogicalSyntaxTree.empty()) {
       return;
@@ -435,11 +435,11 @@ void SearchForStdAlgorithmPatternsCheck::loopFind(
                  context)) {
         diag(firstLoop->getLocStart(), findMsg);
       }
-      if (isMismatch(secondLoop, compareOp, lhsLogicalSyntaxTree,
+      if (isMismatch(innerLoop, compareOp, lhsLogicalSyntaxTree,
                      rhsLogicalSyntaxTree, context)) {
         diag(firstLoop->getLocStart(), mismatchMsg);
       }
-      if (isSearch(secondLoop, compareOp, lhsLogicalSyntaxTree,
+      if (isSearch(innerLoop, compareOp, lhsLogicalSyntaxTree,
                    rhsLogicalSyntaxTree, context)) {
         diag(firstLoop->getLocStart(), searchMsg);
       }
@@ -448,7 +448,7 @@ void SearchForStdAlgorithmPatternsCheck::loopFind(
   if (countOp) {
     if (firstLoop) {
       clang::Stmt *node = const_cast<Stmt *>(countOp);
-      createdControlFlowGraph(node, firstLoop, context);
+      createControlFlowGraph(node, firstLoop, context);
     }
     if (isCountIf(countOp, lhsLogicalSyntaxTree, rhsLogicalSyntaxTree,
                   context)) {
@@ -464,24 +464,24 @@ void SearchForStdAlgorithmPatternsCheck::check(
   const auto *compareOp =
       Result.Nodes.getNodeAs<clang::BinaryOperator>("compareOp");
   const auto *countOp = Result.Nodes.getNodeAs<clang::Stmt>("countOp");
-  const auto *secondLoop = Result.Nodes.getNodeAs<clang::Stmt>("secondLoop");
+  const auto *innerLoop = Result.Nodes.getNodeAs<clang::Stmt>("innerLoop");
   auto *context = Result.Context;
 
   if (const auto *match = Result.Nodes.getNodeAs<clang::ForStmt>(
           "ForWithFunctionCallWithArray")) {
-    loopFind(assignmentOp, compareOp, countOp, match, secondLoop, context);
+    loopFind(assignmentOp, compareOp, countOp, match, innerLoop, context);
   }
   if (const auto *match = Result.Nodes.getNodeAs<clang::DoStmt>(
           "DoWithFunctionCallWithArray")) {
-    loopFind(assignmentOp, compareOp, countOp, match, secondLoop, context);
+    loopFind(assignmentOp, compareOp, countOp, match, innerLoop, context);
   }
   if (const auto *match = Result.Nodes.getNodeAs<clang::WhileStmt>(
           "WhileWithFunctionCallWithArray")) {
-    loopFind(assignmentOp, compareOp, countOp, match, secondLoop, context);
+    loopFind(assignmentOp, compareOp, countOp, match, innerLoop, context);
   }
   if (const auto *match = Result.Nodes.getNodeAs<clang::CXXForRangeStmt>(
           "ForRangeWithFunctionCallWithArray")) {
-    loopFind(assignmentOp, compareOp, countOp, match, secondLoop, context);
+    loopFind(assignmentOp, compareOp, countOp, match, innerLoop, context);
   }
 }
 

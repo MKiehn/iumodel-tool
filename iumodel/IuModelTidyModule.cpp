@@ -19,7 +19,7 @@ public:
 
 // Register the IumodelTidyModule using this statically initialized variable.
 static ClangTidyModuleRegistry::Add<iumodel::IUmodelModule>
-    X("iumodel-module", "Adds sf40 lint checks.");
+    X("iumodel-module", "Adds iumodel lint checks.");
 
 // This anchor is used to force the linker to link in the generated object file
 // and thus register the IumodelModule.
