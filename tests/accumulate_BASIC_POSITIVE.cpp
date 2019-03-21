@@ -1,8 +1,8 @@
-// RUN: %check_clang_tidy %s search-for-Std-Algorithm-Patterns %t -- -- -std=c++11 -I %S/Inputs/misc-finduse-ofstdalgorithm
+// RUN: %check_clang_tidy %s search-for-Std-Algorithm-Patterns %t -- -- -std=c++11 -I %S/Inputs/iumodel
 
 #include "structures.h"
 
-void accumulate_TEST_POSITIV(){
+void accumulate_TEST_POSITIVE(){
   int foo[5] = {16, 2, 77, 40, 12071};
   int *foop;
   foop = foo;
