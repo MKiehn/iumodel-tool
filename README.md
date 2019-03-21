@@ -8,4 +8,11 @@
 extern volatile int IumodelModuleAnchorSource;
 static int LLVM_ATTRIBUTE_UNUSED IumodelModuleAnchorDestination = IumodelModuleAnchorSource;
 ```
-5. run cmake and recompile clang-tidy
+5. copy the cpp files in folder **tests** to your **_test folder_** (`llvm/tools/clang/tools/extra/test`)
+6. copy the folder in **tests/Inputs** to your **_Inputs folder_** (`llvm/tools/clang/tools/extra/test/Inputs`)
+7. run cmake and recompile clang-tidy
+
+### run clang-tidy
+you probably want to run this tool like this:  
+`.\clang-tidy.exe -config="{Checks: '-*,search-for-Std-Algorithm-Patterns'}" path/to/the/c/file/code.c --`
+
