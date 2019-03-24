@@ -2,5 +2,13 @@
 
 #include "structures.h"
 
+bool predicate(int *foo, int *bar){
+    return *foo == *bar ? true : false;
+}
+
+bool predicateValue(int *foo){
+    return *foo > 5 ? true : false;
+}
+
 void transform_TEST_NEGATIVE() {
 }

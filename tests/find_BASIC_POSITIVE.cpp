@@ -21,14 +21,14 @@ void find_TEST_POSITIVE(int x){
   }while(true);
   // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure does look like a std::find [search-for-Std-Algorithm-Patterns]
   while(true){
-    if( foo[counter] == x){
+      if( foo[counter] == x){
       break;
     }
     counter++;
   }
   // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure does look like a std::find [search-for-Std-Algorithm-Patterns]
   while(true){
-    switch(foo[counter] != x) {
+      switch(foo[counter] != x) {
     case 0 : return;
     }
     counter++;
