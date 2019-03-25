@@ -1,13 +1,14 @@
-// RUN: %check_clang_tidy %s search-for-Std-Algorithm-Patterns %t -- -- -std=c++11 -I %S/Inputs/misc-finduse-ofstdalgorithm
+// RUN: %check_clang_tidy %s search-for-Std-Algorithm-Patterns %t -- -- -std=c++11 -I %S/Inputs/iumodel
 
 #include "structures.h"
 
-void search_TEST_POSITIV() {
+void search_TEST_POSITIVE() {
   int foo[5] = {16, 2, 77, 40, 12071};
   int foo2[5] = {16, 3, 77, 40, 12071};
 
   // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
   for (int n = 0; n < 5; n++) {
+  // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
     for (int m = 0; m < 5; m++){
       if (foo2[n] == foo[m]) {
         return;
@@ -17,6 +18,7 @@ void search_TEST_POSITIV() {
   // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
   for (int n = 0; n < 5; n++) {
     int counter = 0;
+  // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
     do {
       if (*(foo2 + n) == *(foo + counter)) {
         break;
@@ -27,6 +29,7 @@ void search_TEST_POSITIV() {
   // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
   for (int n = 0; n < 5; n++) {
     int counter = 0;
+  // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
     while (counter < 5) {
       switch (*(foo2 + n) == *(foo + counter)) {
       case 0:
@@ -39,6 +42,7 @@ void search_TEST_POSITIV() {
   // CHECK-MESSAGES: :[[@LINE+2]]:3: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
   int counter = 0;
   do {
+  // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
     for (int m = 0; m < 5; m++){
       if (foo2[counter] == foo[m]) {
         break;
@@ -50,6 +54,7 @@ void search_TEST_POSITIV() {
   int counter2 = 0;
   do {
     int counter = 0;
+  // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
     do {
       if (foo2[counter2] == foo[counter]) {
         return;
@@ -62,6 +67,7 @@ void search_TEST_POSITIV() {
   int counter3 = 0;
   do {
     int counter = 0;
+  // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
     while (counter < 5) {
       switch (*(foo2 + counter3) == *(foo + counter)) {
       case 0:
@@ -75,6 +81,7 @@ void search_TEST_POSITIV() {
   // CHECK-MESSAGES: :[[@LINE+2]]:3: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
   int counter4 = 0;
   while(counter4 < 5) {
+  // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
     for (int m = 0; m < 5; m++){
       if (foo2[counter4] == foo[m]) {
         break;
@@ -86,6 +93,7 @@ void search_TEST_POSITIV() {
   int counter5 = 0;
   while(counter5 < 5){
     int counter = 0;
+  // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
     do {
       if (foo2[counter5] == foo[counter]) {
         return;
@@ -98,6 +106,7 @@ void search_TEST_POSITIV() {
   int counter6 = 0;
   while(counter6 < 5) {
     int counter = 0;
+  // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
     while (counter < 5) {
       switch (*(foo2 + counter6) == *(foo + counter)) {
       case 0:
