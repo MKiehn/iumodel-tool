@@ -7,7 +7,7 @@ bool predicate(int *foo) { return *foo == 0 ? true : false; }
 void countIf_TEST_NEGATIVE(int x) {
   int foo[] = {16, 2, 77, 40, 12071};
   int counter = 0;
-  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure does look like a std::count_if [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure does look like a std::count_if [search-for-Std-Algorithm-Patterns]
   do {
     if (predicate(&foo[0])) {
       counter++;
