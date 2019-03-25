@@ -1,6 +1,6 @@
 ### install manually
-1. copy the folder **uimodel** to your **_clang-tidy folder_** (`llvm/tools/clang/tools/extra/clang-tidy`)
-2. insert `add_subdirectory(uimodel)` in **CMakeLists.txt** in your **_clang-tidy folder_**
+1. copy the folder **iumodel** to your **_clang-tidy folder_** (`llvm/tools/clang/tools/extra/clang-tidy`)
+2. insert `add_subdirectory(iumodel)` in **CMakeLists.txt** in your **_clang-tidy folder_**
 3. add `clangTidyIumodelModule` to **target_link_libraries** in **CMakeLists.txt** in **_clang-tidy folder_/tool**
 4. insert the following code in **ClangTidyMain.cpp** in **_clang-tidy folder_/tool** at the end of the **namespace tidy**
 ```
