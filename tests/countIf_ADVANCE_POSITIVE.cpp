@@ -19,7 +19,7 @@ void countIf_TEST_POSITIVE() {
   char* TargetStr;
   char* FileStream;
   int IVersion;
-  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure does look like a std::count_if [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure with operation '++' in line 32 does look like a std::count_if [search-for-Std-Algorithm-Patterns]
   do {
     CharValue = GetIoFileInt(FileStream, IVersion, 0, 255, &IsOk);
     if (IsOk && ProcessData) {

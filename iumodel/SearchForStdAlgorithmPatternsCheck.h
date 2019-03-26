@@ -132,9 +132,9 @@ class SearchForStdAlgorithmPatternsCheck : public ClangTidyCheck {
 
   bool isControlFlowTreeNode(clang::Stmt *node, LSTnode &item);
   bool isLogicalSyntaxTreeNode(clang::Stmt *node, LSTnode &item);
-  void traverseAST(clang::Expr *node, ParseInfo modus,
+  void traverseSubtree(clang::Expr *node, ParseInfo modus,
                      std::vector<LSTnode> &LST);
-  void traverseAST(clang::Stmt *node, ParseInfo modus,
+  void traverseSubtree(clang::Stmt *node, ParseInfo modus,
                      std::vector<LSTnode> &LST);
 
   clang::Stmt *getFirstNodeFromExpression(clang::Expr *expr);
@@ -169,6 +169,8 @@ class SearchForStdAlgorithmPatternsCheck : public ClangTidyCheck {
                 const clang::BinaryOperator *compareOp,
                 const clang::Stmt *countOp, const clang::Stmt *firstLoop,
                 const clang::Stmt *secondLoop, clang::ASTContext *context);
+
+  std::string createMessageToUser(StringRef operation, int &lineNumber, std::string algorithm);
 };
 
 }  // namespace iumodel

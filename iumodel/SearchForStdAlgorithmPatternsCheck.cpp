@@ -120,7 +120,7 @@ bool SearchForStdAlgorithmPatternsCheck::isControlFlowTreeNode(
   return false;
 }
 
-void SearchForStdAlgorithmPatternsCheck::traverseAST(
+void SearchForStdAlgorithmPatternsCheck::traverseSubtree(
     clang::Expr *node, ParseInfo modus, std::vector<LSTnode> &LST) {
   if (node->child_end() == node->child_begin()) {
     if (clang::Stmt *singleNode = llvm::dyn_cast<Stmt>(node)) {
@@ -151,13 +151,13 @@ void SearchForStdAlgorithmPatternsCheck::traverseAST(
             LST.push_back(item);
           }
         }
-        traverseAST(child, modus, LST);
+        traverseSubtree(child, modus, LST);
       }
     }
   }
 }
 
-void SearchForStdAlgorithmPatternsCheck::traverseAST(
+void SearchForStdAlgorithmPatternsCheck::traverseSubtree(
     clang::Stmt *node, ParseInfo modus, std::vector<LSTnode> &LST) {
   for (auto child : node->children()) {
     if (child) {
@@ -172,7 +172,7 @@ void SearchForStdAlgorithmPatternsCheck::traverseAST(
           LST.push_back(item);
         }
       }
-      traverseAST(child, modus, LST);
+      traverseSubtree(child, modus, LST);
     }
   }
 }
@@ -209,7 +209,7 @@ void SearchForStdAlgorithmPatternsCheck::createControlFlowGraph(
       clang::Stmt *node = const_cast<Stmt *>(item);
       LSTnode branchStmt = LSTnode(node, nullptr, nullptr);
       controlFlowTree.push_back(branchStmt);
-      traverseAST(node, ParseInfo::ControlFlowSyntax, controlFlowTree);
+      traverseSubtree(node, ParseInfo::ControlFlowSyntax, controlFlowTree);
     }
     startnode = const_cast<Stmt *>(item);
   } while (item != endnode);
@@ -383,6 +383,14 @@ bool SearchForStdAlgorithmPatternsCheck::isCountIf(
   return false;
 }
 
+std::string SearchForStdAlgorithmPatternsCheck::createMessageToUser(
+    StringRef operation, int &lineNumber, std::string algorithm) {
+  std::string userMessage = "Structure with operation '" + operation.str() +
+                            "' in line " + std::to_string(lineNumber) +
+                            " does look like a std::" + algorithm;
+  return userMessage;
+}
+
 void SearchForStdAlgorithmPatternsCheck::loopFind(
     const clang::BinaryOperator *assignmentOp,
     const clang::BinaryOperator *compareOp, const clang::Stmt *countOp,
@@ -413,8 +421,8 @@ void SearchForStdAlgorithmPatternsCheck::loopFind(
       }
     }
 
-    traverseAST(opLHS, ParseInfo::LogicalSyntax, lhsLogicalSyntaxTree);
-    traverseAST(opRHS, ParseInfo::LogicalSyntax, rhsLogicalSyntaxTree);
+    traverseSubtree(opLHS, ParseInfo::LogicalSyntax, lhsLogicalSyntaxTree);
+    traverseSubtree(opRHS, ParseInfo::LogicalSyntax, rhsLogicalSyntaxTree);
 
     if (lhsLogicalSyntaxTree.empty() || rhsLogicalSyntaxTree.empty()) {
       return;
@@ -423,25 +431,45 @@ void SearchForStdAlgorithmPatternsCheck::loopFind(
     if (assignmentOp) {
       if (isAccumulate(assignmentOp, lhsLogicalSyntaxTree, rhsLogicalSyntaxTree,
                        context)) {
-        diag(firstLoop->getLocStart(), accumulateMsg);
+        int lineNumber = context->getSourceManager().getSpellingLineNumber(
+            assignmentOp->getOperatorLoc());
+        std::string messageToUser = createMessageToUser(
+            assignmentOp->getOpcodeStr(), lineNumber, "accumulate");
+        diag(firstLoop->getLocStart(), messageToUser);
       }
       if (isTransform(assignmentOp, lhsLogicalSyntaxTree, rhsLogicalSyntaxTree,
                       context)) {
-        diag(firstLoop->getLocStart(), transformMsg);
+        int lineNumber = context->getSourceManager().getSpellingLineNumber(
+            assignmentOp->getOperatorLoc());
+        std::string messageToUser = createMessageToUser(
+            assignmentOp->getOpcodeStr(), lineNumber, "transform");
+        diag(firstLoop->getLocStart(), messageToUser);
       }
     }
     if (compareOp) {
       if (isFind(compareOp, lhsLogicalSyntaxTree, rhsLogicalSyntaxTree,
                  context)) {
-        diag(firstLoop->getLocStart(), findMsg);
+        int lineNumber = context->getSourceManager().getSpellingLineNumber(
+            compareOp->getOperatorLoc());
+        std::string messageToUser =
+            createMessageToUser(compareOp->getOpcodeStr(), lineNumber, "find");
+        diag(firstLoop->getLocStart(), messageToUser);
       }
       if (isMismatch(innerLoop, compareOp, lhsLogicalSyntaxTree,
                      rhsLogicalSyntaxTree, context)) {
-        diag(firstLoop->getLocStart(), mismatchMsg);
+        int lineNumber = context->getSourceManager().getSpellingLineNumber(
+            compareOp->getOperatorLoc());
+        std::string messageToUser = createMessageToUser(
+            compareOp->getOpcodeStr(), lineNumber, "mismatch");
+        diag(firstLoop->getLocStart(), messageToUser);
       }
       if (isSearch(innerLoop, compareOp, lhsLogicalSyntaxTree,
                    rhsLogicalSyntaxTree, context)) {
-        diag(firstLoop->getLocStart(), searchMsg);
+        int lineNumber = context->getSourceManager().getSpellingLineNumber(
+            compareOp->getOperatorLoc());
+        std::string messageToUser = createMessageToUser(
+            compareOp->getOpcodeStr(), lineNumber, "search");
+        diag(firstLoop->getLocStart(), messageToUser);
       }
     }
   }
@@ -452,7 +480,14 @@ void SearchForStdAlgorithmPatternsCheck::loopFind(
     }
     if (isCountIf(countOp, lhsLogicalSyntaxTree, rhsLogicalSyntaxTree,
                   context)) {
-      diag(firstLoop->getLocStart(), countIfMsg);
+      if (const clang::UnaryOperator *op =
+              llvm::dyn_cast<clang::UnaryOperator>(countOp)) {
+        int lineNumber = context->getSourceManager().getSpellingLineNumber(
+            op->getOperatorLoc());
+        std::string messageToUser = createMessageToUser(
+            op->getOpcodeStr(op->getOpcode()), lineNumber, "count_if");
+        diag(firstLoop->getLocStart(), messageToUser);
+      }
     }
   }
 }

@@ -7,7 +7,7 @@ void accumulate_TEST_NEGATIVE() {
   int *foop;
   foop = foo;
   int sum1 = 0;
-  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure does look like a std::accumulate [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure with operation '=' in line 12 does look like a std::accumulate [search-for-Std-Algorithm-Patterns]
   for (int n = 0; n < 5; n++) {
     sum1 = foo[n] + (sum1 + 1);
   }
