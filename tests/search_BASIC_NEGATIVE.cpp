@@ -8,9 +8,9 @@ void search_TEST_NEGATIVE() {
   int foo[5] = {16, 2, 77, 40, 12071};
   int foo2[5] = {16, 3, 77, 40, 12071};
 
-  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure with operation '==' in line 15 does look like a std::search [search-for-Std-Algorithm-Patterns]
   for (int n = 0; n < 5; n++) {
-  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 15 does look like a std::search [search-for-Std-Algorithm-Patterns]
     for (int m = 0; m < 5; m++) {
       if (predicate(&foo2[n], &foo[m])) {
         return;
@@ -18,9 +18,9 @@ void search_TEST_NEGATIVE() {
     }
   }
 
-  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure with operation '==' in line 25 does look like a std::search [search-for-Std-Algorithm-Patterns]
   for (int n = 0; n < 5; n++) {
-    // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure does look like a std::search [search-for-Std-Algorithm-Patterns]
+    // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 25 does look like a std::search [search-for-Std-Algorithm-Patterns]
     for (int m = 0; m < 5; m++){
       if (foo2[n] == foo[m]) {
         return;
