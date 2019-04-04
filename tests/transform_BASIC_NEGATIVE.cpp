@@ -12,4 +12,20 @@ void transform_TEST_NEGATIVE() {
   for (int n = 0; n < 5; n++) {
     foo2[n] = foo[n];
   }
+
+  int fooRangeLoop[5] = {0, 1, 2, 3, 4};
+  int fooRangeLoop2[5] = {0, 1, 2, 3, 4};
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure with operation '+=' in line 20 does look like a std::transform [search-for-Std-Algorithm-Patterns]
+  for(auto i : fooRangeLoop){
+    foo[i] += i;
+  }
+
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure with operation '==' in line 65 does look like a std::transform [search-for-Std-Algorithm-Patterns]
+  for(auto i : fooRangeLoop){
+    // CHECK-MESSAGES-NOT: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 65 does look like a std::transform [search-for-Std-Algorithm-Patterns]
+    for(auto j : fooRangeLoop2){
+      i = j;
+    }
+  }
 }
+

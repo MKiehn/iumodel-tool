@@ -36,11 +36,33 @@ void mismatch_TEST_NEGATIVE() {
     ++bar, ++bar2;
   }
 
-  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure with operation '!=' in line 43 does look like a std::mismatch [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure with operation '!=' in line 43 does look like a std::mismatch [search-for-Std-Algorithm-Patterns]
   for (int n = 0; n < 5; n++) {
-    // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure with operation '!=' in line 43 does look like a std::mismatch [search-for-Std-Algorithm-Patterns]
+    // CHECK-MESSAGES-NOT: :[[@LINE+1]]:5: warning: Structure with operation '!=' in line 43 does look like a std::mismatch [search-for-Std-Algorithm-Patterns]
+    for (int m = 0; m < 5; m++){
+      if (foo[n] != foo[m]) {
+        return;
+      }
+    }
+  }
+
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure with operation '!=' in line 53 does look like a std::mismatch [search-for-Std-Algorithm-Patterns]
+  for (int n = 0; n < 5; n++) {
+    // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure with operation '!=' in line 53 does look like a std::mismatch [search-for-Std-Algorithm-Patterns]
     for (int m = 0; m < 5; m++){
       if (foo2[n] != foo[m]) {
+        return;
+      }
+    }
+  }
+
+  int fooRangeLoop[5] = {0, 1, 2, 3, 4};
+  int fooRangeLoop2[5] = {0, 1, 2, 3, 4};
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure with operation '==' in line 65 does look like a std::search [search-for-Std-Algorithm-Patterns]
+  for(auto i : fooRangeLoop){
+    // CHECK-MESSAGES-NOT: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 65 does look like a std::search [search-for-Std-Algorithm-Patterns]
+    for(auto j : fooRangeLoop2){
+      if(i == j){
         return;
       }
     }
