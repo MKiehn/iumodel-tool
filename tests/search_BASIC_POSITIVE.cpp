@@ -6,9 +6,9 @@ void search_TEST_POSITIVE() {
   int foo[5] = {16, 2, 77, 40, 12071};
   int foo2[5] = {16, 3, 77, 40, 12071};
 
-  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure with operation '==' in line 13 does look like a std::search [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure with operation '==' in line 13 does look like a std::search [search-for-Std-Algorithm-Patterns]
   for (int n = 0; n < 5; n++) {
-  // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 13 does look like a std::search [search-for-Std-Algorithm-Patterns]
+    // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 13 does look like a std::search [search-for-Std-Algorithm-Patterns]
     for (int m = 0; m < 5; m++){
       if (foo2[n] == foo[m]) {
         return;
@@ -26,7 +26,7 @@ void search_TEST_POSITIVE() {
       counter++;
     } while (counter < 5);
   }
-  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure with operation '==' in line 34 does look like a std::search [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure with operation '==' in line 34 does look like a std::search [search-for-Std-Algorithm-Patterns]
   for (int n = 0; n < 5; n++) {
     int counter = 0;
   // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 34 does look like a std::search [search-for-Std-Algorithm-Patterns]
@@ -39,7 +39,7 @@ void search_TEST_POSITIVE() {
     }
   }
   // Do here
-  // CHECK-MESSAGES: :[[@LINE+2]]:3: warning: Structure with operation '==' in line 47 does look like a std::search [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES-NOT: :[[@LINE+2]]:3: warning: Structure with operation '==' in line 47 does look like a std::search [search-for-Std-Algorithm-Patterns]
   int counter = 0;
   do {
   // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 47 does look like a std::search [search-for-Std-Algorithm-Patterns]
@@ -63,7 +63,7 @@ void search_TEST_POSITIVE() {
     } while (counter < 5);
     counter2++;
   }while( counter2 < 5);
-  // CHECK-MESSAGES: :[[@LINE+2]]:3: warning: Structure with operation '==' in line 72 does look like a std::search [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES-NOT: :[[@LINE+2]]:3: warning: Structure with operation '==' in line 72 does look like a std::search [search-for-Std-Algorithm-Patterns]
   int counter3 = 0;
   do {
     int counter = 0;
@@ -78,7 +78,7 @@ void search_TEST_POSITIVE() {
     counter3++;
   }while(counter3 < 5);
   // While here
-  // CHECK-MESSAGES: :[[@LINE+2]]:3: warning: Structure with operation '==' in line 86 does look like a std::search [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES-NOT: :[[@LINE+2]]:3: warning: Structure with operation '==' in line 86 does look like a std::search [search-for-Std-Algorithm-Patterns]
   int counter4 = 0;
   while(counter4 < 5) {
   // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 86 does look like a std::search [search-for-Std-Algorithm-Patterns]
@@ -102,7 +102,7 @@ void search_TEST_POSITIVE() {
     } while (counter < 5);
     counter5++;
   }
-  // CHECK-MESSAGES: :[[@LINE+2]]:3: warning: Structure with operation '==' in line 111 does look like a std::search [search-for-Std-Algorithm-Patterns]
+  // CHECK-MESSAGES-NOT: :[[@LINE+2]]:3: warning: Structure with operation '==' in line 111 does look like a std::search [search-for-Std-Algorithm-Patterns]
   int counter6 = 0;
   while(counter6 < 5) {
     int counter = 0;
@@ -116,4 +116,28 @@ void search_TEST_POSITIVE() {
     }
     counter6++;
   }
+  int fooRangeLoop[5] = {0, 1, 2, 3, 4};
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure with operation '==' in line 125 does look like a std::search [search-for-Std-Algorithm-Patterns]
+  for(auto i : fooRangeLoop){
+    int counter7 = 0;
+    // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 125 does look like a std::search [search-for-Std-Algorithm-Patterns]
+    while (counter7 < 5) {
+      switch (*(foo2 + i) == *(foo + counter7)) {
+      case 0:
+        return;
+      }
+    }
+  }
+  // CHECK-MESSAGES-NOT: :[[@LINE+1]]:3: warning: Structure with operation '==' in line 136 does look like a std::search [search-for-Std-Algorithm-Patterns]
+  int counter8 = 0;
+  do{
+    // CHECK-MESSAGES: :[[@LINE+1]]:5: warning: Structure with operation '==' in line 136 does look like a std::search [search-for-Std-Algorithm-Patterns]
+    for(auto i : fooRangeLoop){
+      switch (*(foo2 + i) == *(foo + counter8)) {
+      case 0:
+        return;
+      }
+      counter8++;
+    }
+  }while (counter8 < 5);
 }

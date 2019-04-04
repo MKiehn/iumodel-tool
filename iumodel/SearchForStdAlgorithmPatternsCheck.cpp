@@ -24,15 +24,6 @@ namespace clang {
 namespace tidy {
 namespace iumodel {
 
-static const char foreachMsg[] = "Structure does look like a std::for_each";
-static const char transformMsg[] = "Structure does look like a std::transform";
-static const char accumulateMsg[] =
-    "Structure does look like a std::accumulate";
-static const char findMsg[] = "Structure does look like a std::find";
-static const char mismatchMsg[] = "Structure does look like a std::mismatch";
-static const char searchMsg[] = "Structure does look like a std::search";
-static const char countIfMsg[] = "Structure does look like a std::count_if";
-
 void SearchForStdAlgorithmPatternsCheck::registerMatchers(MatchFinder *Finder) {
   StatementMatcher arrayOp = castExpr(hasCastKind(CK_ArrayToPointerDecay));
   StatementMatcher bCountOp =
@@ -50,35 +41,44 @@ void SearchForStdAlgorithmPatternsCheck::registerMatchers(MatchFinder *Finder) {
                            hasOperatorName("|=")))
           .bind("assignmentOp");
   StatementMatcher compareOp =
-      binaryOperator(anyOf(hasOperatorName("=="), hasOperatorName("!=")))
+      binaryOperator(anyOf(hasOperatorName("=="), hasOperatorName("!="),
+                           hasOperatorName("<"), hasOperatorName(">"),
+                           hasOperatorName("<="), hasOperatorName(">=")))
           .bind("compareOp");
   StatementMatcher findRange =
       allOf(hasDescendant(countOp), hasDescendant(arrayOp));
-  StatementMatcher findRangeWithAssignment =
-      allOf(hasDescendant(countOp), hasDescendant(arrayOp),
-            anyOf(hasDescendant(assignmentOp), hasDescendant(compareOp)));
-  StatementMatcher findRangeWithRangeAndAssigment =
-      allOf(hasDescendant(countOp), hasDescendant(arrayOp),
-            anyOf(forStmt(findRangeWithAssignment).bind("innerLoop"),
-                  doStmt(findRangeWithAssignment).bind("innerLoop"),
-                  whileStmt(findRangeWithAssignment).bind("innerLoop"),
-                  cxxForRangeStmt(findRangeWithAssignment).bind("innerLoop")));
 
-  Finder->addMatcher(forStmt(anyOf(findRangeWithRangeAndAssigment,
-                                   findRangeWithAssignment, findRange))
-                         .bind("ForWithFunctionCallWithArray"),
-                     this);
-  Finder->addMatcher(doStmt(anyOf(findRangeWithRangeAndAssigment,
-                                  findRangeWithAssignment, findRange))
-                         .bind("DoWithFunctionCallWithArray"),
-                     this);
-  Finder->addMatcher(whileStmt(anyOf(findRangeWithRangeAndAssigment,
-                                     findRangeWithAssignment, findRange))
-                         .bind("WhileWithFunctionCallWithArray"),
-                     this);
-  Finder->addMatcher(cxxForRangeStmt(anyOf(findRangeWithRangeAndAssigment,
-                                           findRangeWithAssignment, findRange))
+  StatementMatcher findAlgorithm =
+      compoundStmt(anyOf(hasDescendant(assignmentOp), hasDescendant(compareOp),
+                         hasDescendant(countOp)));
+
+  StatementMatcher findAlgorithmForSingleForRange = hasDescendant(
+      compoundStmt(anyOf(hasDescendant(countOp), hasDescendant(assignmentOp),
+                         hasDescendant(compareOp))));
+
+  StatementMatcher findRangeWithRangeAndAlgorithm = anyOf(
+      forStmt(findRange, hasDescendant(findAlgorithm)).bind("innerLoop"),
+      doStmt(findRange, hasDescendant(findAlgorithm)).bind("innerLoop"),
+      whileStmt(findRange, hasDescendant(findAlgorithm)).bind("innerLoop"),
+      cxxForRangeStmt(hasDescendant(findAlgorithm)).bind("innerLoop"));
+
+  Finder->addMatcher(
+      forStmt(findRange, anyOf(findRangeWithRangeAndAlgorithm, findAlgorithm))
+          .bind("ForWithFunctionCallWithArray"),
+      this);
+  Finder->addMatcher(
+      doStmt(findRange, anyOf(findRangeWithRangeAndAlgorithm, findAlgorithm))
+          .bind("DoWithFunctionCallWithArray"),
+      this);
+  Finder->addMatcher(
+      whileStmt(findRange, anyOf(findRangeWithRangeAndAlgorithm, findAlgorithm))
+          .bind("WhileWithFunctionCallWithArray"),
+      this);
+  Finder->addMatcher(cxxForRangeStmt(findRangeWithRangeAndAlgorithm)
                          .bind("ForRangeWithFunctionCallWithArray"),
+                     this);
+  Finder->addMatcher(cxxForRangeStmt(findAlgorithmForSingleForRange)
+                         .bind("SingleForRangeWithFunctionCallWithArray"),
                      this);
 }
 
@@ -278,7 +278,8 @@ bool SearchForStdAlgorithmPatternsCheck::isAccumulate(
     std::vector<LSTnode> &rightLST, clang::ASTContext *context) {
   if (operation->isCompoundAssignmentOp() &&
       !operation->getOpcodeStr().equals(StringRef("-="))) {
-    if (hasVariable(leftLST) && hasIterable(rightLST)) {
+    if (hasVariable(leftLST) && !hasIterable(leftLST) &&
+        hasIterable(rightLST)) {
       return true;
     }
   }
@@ -289,7 +290,7 @@ bool SearchForStdAlgorithmPatternsCheck::isAccumulate(
       for (auto itemLeft : leftLST) {
         if (itemLeft.isVariable()) {
           for (auto itemRight : rightLST) {
-            if (itemLeft.equalsVariable(itemRight)) {
+            if (itemRight.equalsVariable(itemLeft)) {
               return true;
             }
           }
@@ -416,7 +417,7 @@ void SearchForStdAlgorithmPatternsCheck::loopFind(
       opLHS = compareOp->getLHS();
       opRHS = compareOp->getRHS();
       clang::Stmt *firstNode = getFirstNodeFromExpression(opLHS);
-      if (firstNode && firstLoop) {
+      if (firstNode) {
         createControlFlowGraph(firstNode, firstLoop, context);
       }
     }
@@ -516,6 +517,10 @@ void SearchForStdAlgorithmPatternsCheck::check(
   }
   if (const auto *match = Result.Nodes.getNodeAs<clang::CXXForRangeStmt>(
           "ForRangeWithFunctionCallWithArray")) {
+    loopFind(assignmentOp, compareOp, countOp, match, innerLoop, context);
+  }
+  if (const auto *match = Result.Nodes.getNodeAs<clang::CXXForRangeStmt>(
+          "SingleForRangeWithFunctionCallWithArray")) {
     loopFind(assignmentOp, compareOp, countOp, match, innerLoop, context);
   }
 }

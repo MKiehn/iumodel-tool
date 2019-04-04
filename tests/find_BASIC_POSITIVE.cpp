@@ -33,5 +33,12 @@ void find_TEST_POSITIVE(int x){
     }
     counter++;
   }
+  int fooRangeLoop[5] = {0, 1, 2, 3, 4};
+  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure with operation '!=' in line 39 does look like a std::find [search-for-Std-Algorithm-Patterns]
+  for(auto i : fooRangeLoop){
+    switch(foo[i] != x) {
+    case 0 : return;
+    }
+  }
 }
 

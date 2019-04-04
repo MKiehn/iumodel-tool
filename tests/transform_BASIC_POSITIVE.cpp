@@ -47,4 +47,15 @@ void transform_TEST_POSITIVE() {
     *(foo7 + counter3) = *(foo + counter3);
     counter3++;
   }
+
+  int fooRangeLoop[5] = {0, 1, 2, 3, 4};
+  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure with operation '+=' in line 54 does look like a std::transform [search-for-Std-Algorithm-Patterns]
+  for(auto i : fooRangeLoop){
+    foo[i] += foo2[i];
+  }
+
+  // CHECK-MESSAGES: :[[@LINE+1]]:3: warning: Structure with operation '=' in line 59 does look like a std::transform [search-for-Std-Algorithm-Patterns]
+  for(auto i : fooRangeLoop){
+    foo[i] = foo2[i];
+  }
 }
